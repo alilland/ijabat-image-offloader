@@ -1,0 +1,17 @@
+{
+    "name": "aronlilland/ijabat-image-offloader",
+    "autoload": {
+        "psr-4": {
+            "Aronlilland\\CustomS3Offloader\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Aron Lilland",
+            "email": "alilland@ijabat.org"
+        }
+    ],
+    "require": {
+        "aws/aws-sdk-php": "^3.342"
+    }
+}
