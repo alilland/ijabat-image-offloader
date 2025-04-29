@@ -103,5 +103,5 @@ Licensed under the GPL-2.0-or-later license.
 
 ## Author
 
-Built and maintained by [Your Name].
+Built and maintained by Ijabat Tech Solutions, LLC.
 
