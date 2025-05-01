@@ -3,8 +3,9 @@
 Plugin Name: Ijabat Image Offloader
 Description: Offloads WordPress media uploads and thumbnails to AWS S3.
 Version: 1.0.0
-Author: Aron Lilland
+Author: Ijabat Tech Solutions, LLC
 License: GPL2+
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 */
 
 if (!defined('ABSPATH')) {
