@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="tests/bootstrap.php" colors="true" verbose="true">
+  <testsuites>
+    <testsuite name="Ijabat Image Offloader Tests">
+      <directory>./tests</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+    <server name="WP_PLUGIN_DIR" value="/var/www/html/wp-content/plugins/ijabat-image-offloader" />
+    <server name="WP_TESTS_DIR" value="tests/wordpress-tests-lib" />
+  </php>
+</phpunit>
