@@ -42,7 +42,11 @@ class Ijabat_Image_Offloader {
         $upload_dir = wp_upload_dir();
         $this->local_baseurl = $upload_dir['baseurl'];
         $this->local_basedir = wp_normalize_path($upload_dir['basedir']);
-        $this->s3_baseurl = sprintf('https://%s.s3.%s.amazonaws.com', $this->bucket, $this->region);
+        if (!empty($_ENV['AWS_CLOUDFRONT_DOMAIN'])) {
+            $this->s3_baseurl = rtrim($_ENV['AWS_CLOUDFRONT_DOMAIN'], '/');
+        } else {
+            $this->s3_baseurl = sprintf('https://%s.s3.%s.amazonaws.com', $this->bucket, $this->region);
+        }
 
         add_filter('wp_handle_upload', [$this, 'upload_to_s3']);
         add_filter('wp_generate_attachment_metadata', [$this, 'upload_thumbnails_to_s3'], 10, 2);
