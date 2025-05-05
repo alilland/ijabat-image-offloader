@@ -18,7 +18,6 @@ use Aws\S3\S3Client;
 use Aws\Exception\AwsException;
 
 class Ijabat_Image_Offloader {
-
     private $s3;
     private $bucket;
     private $region;
@@ -27,23 +26,23 @@ class Ijabat_Image_Offloader {
     private $s3_baseurl;
 
     public function __construct() {
-        $this->bucket = $_ENV['AWS_S3_BUCKET'] ?? null;
-        $this->region = $_ENV['AWS_DEFAULT_REGION'] ?? null;
+        $this->bucket = sanitize_text_field($_ENV['AWS_S3_BUCKET'] ?? '');
+        $this->region = sanitize_text_field($_ENV['AWS_DEFAULT_REGION'] ?? '');
+
+        $key = sanitize_text_field($_ENV['AWS_ACCESS_KEY_ID'] ?? '');
+        $secret = sanitize_text_field($_ENV['AWS_SECRET_ACCESS_KEY'] ?? '');
 
         $this->s3 = new S3Client([
             'version' => 'latest',
             'region'  => $this->region,
-            'credentials' => [
-                'key'    => $_ENV['AWS_ACCESS_KEY_ID'] ?? null,
-                'secret' => $_ENV['AWS_SECRET_ACCESS_KEY'] ?? null,
-            ],
+            'credentials' => compact('key', 'secret'),
         ]);
 
         $upload_dir = wp_upload_dir();
         $this->local_baseurl = $upload_dir['baseurl'];
         $this->local_basedir = wp_normalize_path($upload_dir['basedir']);
         if (!empty($_ENV['AWS_CLOUDFRONT_DOMAIN'])) {
-            $this->s3_baseurl = rtrim($_ENV['AWS_CLOUDFRONT_DOMAIN'], '/');
+            $this->s3_baseurl = rtrim(sanitize_text_field($_ENV['AWS_CLOUDFRONT_DOMAIN']), '/');
         } else {
             $this->s3_baseurl = sprintf('https://%s.s3.%s.amazonaws.com', $this->bucket, $this->region);
         }
@@ -61,7 +60,7 @@ class Ijabat_Image_Offloader {
 
         add_action('delete_attachment', [$this, 'delete_from_s3']);
 
-        error_log('[CustomS3Offloader] Initialized. Bucket=' . $this->bucket . ', Region=' . $this->region);
+        $this->plugin_log('[CustomS3Offloader] Initialized. Bucket=' . $this->bucket . ', Region=' . $this->region);
     }
 
     private function s3_key($file_path) {
@@ -99,7 +98,7 @@ class Ijabat_Image_Offloader {
             $original_file_path = $dirname . '/' . $original_filename;
 
             if (file_exists($original_file_path)) {
-                error_log('[CustomS3Offloader] Found original file to delete: ' . $original_file_path);
+                $this->plugin_log('[CustomS3Offloader] Found original file to delete: ' . $original_file_path);
                 $paths[] = $original_file_path; // Add it to be uploaded + deleted
             }
         }
@@ -114,11 +113,11 @@ class Ijabat_Image_Offloader {
         foreach ($paths as $path) {
             if (file_exists($path)) {
                 $this->s3_upload($path); // ✅ Upload to S3
-                unlink($path);            // ✅ Then delete local file
-                error_log('[CustomS3Offloader] Deleted local: ' . $path);
+                wp_delete_file($path);   // ✅ Then delete local file
+                $this->plugin_log('[CustomS3Offloader] Deleted local: ' . $path);
                 $this->maybe_cleanup_empty_folder($path);
             } else {
-                error_log('[CustomS3Offloader] Warning: File not found for S3 upload: ' . $path);
+                $this->plugin_log('[CustomS3Offloader] Warning: File not found for S3 upload: ' . $path);
             }
         }
 
@@ -134,9 +133,9 @@ class Ijabat_Image_Offloader {
                 'SourceFile' => $path,
                 'ContentType' => mime_content_type($path),
             ]);
-            error_log('[CustomS3Offloader] Uploaded to S3: ' . $key);
+            $this->plugin_log('[CustomS3Offloader] Uploaded to S3: ' . $key);
         } catch (AwsException $e) {
-            error_log('[CustomS3Offloader] S3 Upload Error: ' . $e->getAwsErrorMessage());
+            $this->plugin_log('[CustomS3Offloader] S3 Upload Error: ' . $e->getAwsErrorMessage());
         }
     }
 
@@ -173,11 +172,11 @@ class Ijabat_Image_Offloader {
         $meta = wp_get_attachment_metadata($attachment_id);
 
         if (!$meta || empty($meta['file'])) {
-            error_log('[CustomS3Offloader] delete_from_s3(): No metadata found for attachment ID ' . $attachment_id);
+            $this->plugin_log('[CustomS3Offloader] delete_from_s3(): No metadata found for attachment ID ' . $attachment_id);
             return;
         }
 
-        error_log('[CustomS3Offloader] delete_from_s3(): Starting delete for attachment ID ' . $attachment_id);
+        $this->plugin_log('[CustomS3Offloader] delete_from_s3(): Starting delete for attachment ID ' . $attachment_id);
 
         $paths = [];
 
@@ -192,7 +191,7 @@ class Ijabat_Image_Offloader {
             $original_filename = str_replace('-scaled', '', $scaled_filename);
             $original_relative_path = $dirname . '/' . $original_filename;
 
-            error_log('[CustomS3Offloader] delete_from_s3(): Also preparing original file: ' . $original_relative_path);
+            $this->plugin_log('[CustomS3Offloader] delete_from_s3(): Also preparing original file: ' . $original_relative_path);
 
             $paths[] = $original_relative_path;
         }
@@ -207,27 +206,27 @@ class Ijabat_Image_Offloader {
         foreach ($paths as $relative_path) {
             $key = ltrim($relative_path, '/');
 
-            error_log('[CustomS3Offloader] delete_from_s3(): Preparing to delete S3 Key: ' . $key);
+            $this->plugin_log('[CustomS3Offloader] delete_from_s3(): Preparing to delete S3 Key: ' . $key);
 
             try {
                 $this->s3->deleteObject([
                     'Bucket' => $this->bucket,
                     'Key'    => $key,
                 ]);
-                error_log('[CustomS3Offloader] delete_from_s3(): Successfully deleted from S3: ' . $key);
+                $this->plugin_log('[CustomS3Offloader] delete_from_s3(): Successfully deleted from S3: ' . $key);
             } catch (AwsException $e) {
-                error_log('[CustomS3Offloader] delete_from_s3(): S3 Delete Error: ' . $e->getAwsErrorMessage());
+                $this->plugin_log('[CustomS3Offloader] delete_from_s3(): S3 Delete Error: ' . $e->getAwsErrorMessage());
             }
 
             // 🧹 Now try deleting local file
             $full_local_path = $this->local_basedir . '/' . $key;
 
             if (file_exists($full_local_path)) {
-                unlink($full_local_path);
-                error_log('[CustomS3Offloader] delete_from_s3(): Successfully deleted local file: ' . $full_local_path);
+                wp_delete_file($full_local_path);
+                $this->plugin_log('[CustomS3Offloader] delete_from_s3(): Successfully deleted local file: ' . $full_local_path);
                 $this->maybe_cleanup_empty_folder($full_local_path);
             } else {
-                error_log('[CustomS3Offloader] delete_from_s3(): Local file not found (already deleted?): ' . $full_local_path);
+                $this->plugin_log('[CustomS3Offloader] delete_from_s3(): Local file not found (already deleted?): ' . $full_local_path);
             }
         }
     }
@@ -275,11 +274,21 @@ class Ijabat_Image_Offloader {
         $dir = dirname($path);
         while ($dir !== $this->local_basedir) {
             if (is_dir($dir) && count(glob($dir . '/*')) === 0) {
+                // phpcs:disable WordPress.WP.AlternativeFunctions.file_system_operations_rmdir, WordPress.VIP.FileSystemWritesDisallow.rmdir_rmdir
                 rmdir($dir);
+                // phpcs:enable
                 $dir = dirname($dir);
             } else {
                 break;
             }
+        }
+    }
+
+    private function plugin_log($message) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            // phpcs:disable WordPress.PHP.DevelopmentFunctions
+            error_log('[IjabatS3] ' . $message);
+            // phpcs:enable
         }
     }
 }

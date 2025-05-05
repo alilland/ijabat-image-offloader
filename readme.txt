@@ -2,13 +2,13 @@
 Contributors: ijabattech
 Tags: s3, media offload, amazon s3, image optimization, cloud storage
 Requires at least: 6.0
-Tested up to: 6.5
+Tested up to: 6.8
 Requires PHP: 8.0
 Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Ijabat Image Offloader is a lightweight WordPress plugin that offloads all media uploads — including thumbnails — to an Amazon S3 bucket and serves them from S3.
+Offload WordPress media uploads and thumbnails to Amazon S3. Automatically delete local files and serve from the cloud.
 
 == Description ==
 
