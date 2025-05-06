@@ -1,16 +1,16 @@
 {
-  "name": "aronlilland/ijabat-image-offloader",
+  "name": "ijabat/image-offloader",
   "description": "Ijabat Image Offloader is a lightweight WordPress plugin that automatically offloads all media uploads — including original files and generated thumbnails — to an Amazon S3 bucket.",
   "autoload": {
     "psr-4": {
-      "Aronlilland\\IjabatImageOffloader\\": "src/"
+      "IjabatImageOffloader\\": "app/"
     }
   },
   "license": "GPL2+",
   "authors": [
     {
-      "name": "Aron Lilland",
-      "email": "alilland@ijabat.org"
+      "name": "Ijabat Tech Solutions, LLC",
+      "email": "info@ijabat.org"
     }
   ],
   "require": {
