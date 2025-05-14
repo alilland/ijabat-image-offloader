@@ -4,7 +4,7 @@
 [![PHP](https://img.shields.io/badge/PHP-8.0%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2-blue.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
 
-> Offload WordPress media uploads and thumbnails to Amazon S3. Automatically delete local files and serve from the cloud.
+> Offload WordPress media uploads and thumbnails to Amazon S3 and serve through CloudFront CDN. Automatically delete local files and serve from the cloud.
 
 ## 🚀 Features
 
@@ -12,46 +12,41 @@
 - Upload all generated thumbnail sizes to S3
 - Automatically delete local copies after successful upload
 - Clean up empty folders in `/wp-content/uploads/` after file deletion
-- Serve all media URLs directly from your S3 bucket
+- Serve all media through CloudFront CDN for optimal performance
 - Auto-deletes media from S3 when attachment is deleted in WordPress
-- Minimal dependency footprint (AWS SDK + Dotenv)
-- Follows best security practices (no unnecessary public ACLs)
+- Minimal dependency footprint (AWS SDK)
+- Follows AWS security best practices with CloudFront Origin Access Control
 
 ## 📋 Requirements
 
 - WordPress 6.0 or higher
 - PHP 8.0 or higher
 - Composer for dependency management
+- AWS account with S3 and CloudFront services
 
 ## 🔧 Installation
 
 1. Clone the repository into your WordPress plugins directory:
 ```bash
-git clone https://github.com/yourusername/custom-s3-offloader.git wp-content/plugins/custom-s3-offloader
+git clone https://github.com/yourusername/ijabat-image-offloader.git wp-content/plugins/ijabat-image-offloader
 ```
 
 2. Install Composer dependencies:
 ```bash
-cd wp-content/plugins/custom-s3-offloader && composer install
+cd wp-content/plugins/ijabat-image-offloader && composer install
 ```
 
-3. Create a `.env.local` file in your WordPress root (`/htdocs/your-site/.env.local`) with:
-```env
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_S3_BUCKET=your-bucket-name
-AWS_DEFAULT_REGION=your-region (e.g., us-west-1)
-```
+3. Configure AWS services by following our detailed guide:
+   - [AWS Configuration Guide](readme/aws_config.md)
+   - Includes setup for S3, CloudFront, and IAM
+   - Security best practices
+   - Troubleshooting steps
 
-4. Add the following to `wp-config.php` to load the environment variables:
-```php
-if (file_exists(__DIR__ . '/vendor/autoload.php')) {
-    require_once __DIR__ . '/vendor/autoload.php';
-    Dotenv\Dotenv::createImmutable(__DIR__, '.env.local')->safeLoad();
-}
-```
+4. Configure the plugin:
+   - **Recommended**: Set environment variables at your host level
+   - **Alternative**: Use the WordPress admin settings panel
 
-5. Activate the plugin from the WordPress Admin Plugins page.
+5. Activate the plugin from the WordPress Admin Plugins page
 
 ## ❓ FAQ
 
@@ -60,31 +55,32 @@ if (file_exists(__DIR__ . '/vendor/autoload.php')) {
 - Generate thumbnails: Thumbnails are uploaded to S3
 - After upload: Local files are deleted
 - Delete attachment: Files are deleted from S3
-- Serve URLs: Media is served directly from S3
+- Serve URLs: Media is served through CloudFront CDN
 
 ### Is WordPress Multisite supported?
 Not yet — multisite functionality is not currently tested or supported.
 
-### Can I use private S3 buckets or signed URLs?
-Not at this time. All uploads are assumed to be public.
+### Can I use private S3 buckets?
+Yes! The plugin uses CloudFront Origin Access Control (OAC) to serve files securely from private S3 buckets.
 
 ## ⚠️ Known Limitations
 
-- All uploads are assumed to be public
-- Private/signed URLs are not supported yet
 - WordPress Multisite (Network) is not yet tested
+- Requires modern PHP version (8.0+)
 
 ## 🗺️ Roadmap
 
-- [ ] CloudFront CDN integration
-- [ ] Optional signed S3 URLs for protected media
 - [ ] Background uploads for very large files
 - [ ] Support for WordPress Multisite environments
+- [ ] Advanced CloudFront configuration options
+- [ ] Custom domain support for CloudFront
 
 ## 📝 Changelog
 
 ### 1.0.0
-- Initial release
+- Initial release with S3 and CloudFront support
+- Implemented secure CloudFront OAC
+- Added environment variable support
 
 ## 📜 License
 
